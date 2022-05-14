@@ -1,4 +1,6 @@
-package main
+// Package ghost implements a client for the Ghost Content API: https://ghost.org/docs/content-api/
+
+package ghost
 
 import (
 	"encoding/json"
@@ -10,11 +12,13 @@ import (
 	"github.com/mplewis/ghostini/cache"
 )
 
-type host struct {
-	apiUrl     string
-	contentKey string
+// Host represents the target Ghost instance to fetch data from.
+type Host struct {
+	APIURL     string
+	ContentKey string
 }
 
+// PostMeta is the metadata for a post, returned when fetching several posts.
 type PostMeta struct {
 	Title        string    `json:"title"`
 	Slug         string    `json:"slug"`
@@ -24,6 +28,7 @@ type PostMeta struct {
 	PublishedAgo string
 }
 
+// Post is the full data for a post when fetched individually.
 type Post struct {
 	Title        string    `json:"title"`
 	URL          string    `json:"url"`
@@ -37,7 +42,8 @@ type Post struct {
 	UpdatedAgo   string
 }
 
-type postsResp struct {
+// PostsResp is the response from the Ghost API for several posts.
+type PostsResp struct {
 	Posts []PostMeta `json:"posts"`
 	Meta  struct {
 		Pagination struct {
@@ -51,23 +57,25 @@ type postsResp struct {
 	} `json:"meta"`
 }
 
-type postResp struct {
+// PostResp is the response from the Ghost API for a single post.
+type PostResp struct {
 	Posts []Post `json:"posts"`
 }
 
-func getPosts(c *cache.Cache, h host, page int) (postsResp, error) {
+// GetPosts fetches a page of posts from Ghost.
+func GetPosts(c *cache.Cache, h Host, page int) (PostsResp, error) {
 	v := url.Values{}
 	v.Set("page", fmt.Sprintf("%d", page))
 	v.Set("limit", "10")
-	v.Set("key", h.contentKey)
+	v.Set("key", h.ContentKey)
 	v.Set("fields", "title,slug,published_at,excerpt,reading_time")
 	v.Set("filter", "visibility:public")
 	// HACK: Ghost won't return reading time without plaintext, or excerpt without HTML
 	// https://github.com/TryGhost/Ghost/issues/10396#issuecomment-918849637
 	v.Set("formats", "plaintext,html")
-	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/?%s", h.apiUrl, v.Encode())
+	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/?%s", h.APIURL, v.Encode())
 
-	var resp postsResp
+	var resp PostsResp
 	data, _, err := c.Get(url)
 	if err != nil {
 		return resp, err
@@ -79,12 +87,13 @@ func getPosts(c *cache.Cache, h host, page int) (postsResp, error) {
 	return resp, err
 }
 
-func getPost(c *cache.Cache, h host, slug string) (r postResp, found bool, err error) {
+// GetPost fetches a single post from Ghost.
+func GetPost(c *cache.Cache, h Host, slug string) (r PostResp, found bool, err error) {
 	v := url.Values{}
-	v.Set("key", h.contentKey)
-	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/slug/%s?%s", h.apiUrl, slug, v.Encode())
+	v.Set("key", h.ContentKey)
+	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/slug/%s?%s", h.APIURL, slug, v.Encode())
 
-	var resp postResp
+	var resp PostResp
 	data, found, err := c.Get(url)
 	if err != nil || !found {
 		return resp, found, err

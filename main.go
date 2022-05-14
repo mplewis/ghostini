@@ -13,6 +13,7 @@ import (
 
 	"github.com/a-h/gemini"
 	"github.com/mplewis/ghostini/cache"
+	"github.com/mplewis/ghostini/ghost"
 )
 
 type Server struct{}
@@ -33,7 +34,7 @@ func parseInt(s string, dfault int) int {
 func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 	if r.URL.Path == "/" {
 		page := parseInt(r.URL.Query().Get("page"), 1)
-		resp, err := getPosts(c, h, page)
+		resp, err := ghost.GetPosts(c, h, page)
 		if err != nil {
 			w.SetHeader(gemini.CodeTemporaryFailure, "")
 			return
@@ -45,7 +46,7 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 
 	if matches := slugMatcher.FindStringSubmatch(r.URL.Path); len(matches) > 0 {
 		slug := matches[1]
-		resp, found, err := getPost(c, h, slug)
+		resp, found, err := ghost.GetPost(c, h, slug)
 		if err != nil {
 			w.SetHeader(gemini.CodeTemporaryFailure, "")
 			return
@@ -80,17 +81,17 @@ func mustEnv(key string) string {
 }
 
 var c = cache.New()
-var h = host{
-	apiUrl:     mustEnv("GHOST_SITE"),
-	contentKey: mustEnv("CONTENT_KEY"),
+var h = ghost.Host{
+	APIURL:     mustEnv("GHOST_SITE"),
+	ContentKey: mustEnv("CONTENT_KEY"),
 }
 
 func main() {
-	if !(strings.HasPrefix(h.apiUrl, "http://") || strings.HasPrefix(h.apiUrl, "https://")) {
+	if !(strings.HasPrefix(h.APIURL, "http://") || strings.HasPrefix(h.APIURL, "https://")) {
 		log.Fatalf("GHOST_SITE must start with http:// or https://")
 	}
-	h.apiUrl = strings.TrimSuffix(h.apiUrl, "/")
-	fmt.Printf("Starting server for Ghost site at %s\n", h.apiUrl)
+	h.APIURL = strings.TrimSuffix(h.APIURL, "/")
+	fmt.Printf("Starting server for Ghost site at %s\n", h.APIURL)
 
 	cert, err := tls.LoadX509KeyPair("tmp/localhost.crt", "tmp/localhost.key")
 	check(err)

@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/LukeEmmet/html2gemini"
+	"github.com/mplewis/ghostini/ghost"
 )
 
 //go:embed templates/index.gmi
@@ -21,7 +22,7 @@ var tmplPost = template.Must(template.New("post").Parse(tmplPostRaw))
 
 type indexViewModel struct {
 	Host            string
-	Posts           []PostMeta
+	Posts           []ghost.PostMeta
 	Link            string
 	PrevPagePresent bool
 	PrevPage        string
@@ -29,8 +30,8 @@ type indexViewModel struct {
 	NextPage        string
 }
 
-func renderIndex(w io.Writer, h host, p postsResp) error {
-	indexViewModel := indexViewModel{Host: h.apiUrl, Posts: p.Posts}
+func renderIndex(w io.Writer, h ghost.Host, p ghost.PostsResp) error {
+	indexViewModel := indexViewModel{Host: h.APIURL, Posts: p.Posts}
 	fmt.Printf("%+v\n", p.Meta.Pagination)
 	if p.Meta.Pagination.Prev != 0 {
 		indexViewModel.PrevPagePresent = true
@@ -50,7 +51,7 @@ func renderIndex(w io.Writer, h host, p postsResp) error {
 	return tmplIndex.Execute(w, indexViewModel)
 }
 
-func renderPost(w io.Writer, p Post) error {
+func renderPost(w io.Writer, p ghost.Post) error {
 	p.Title = html.UnescapeString(p.Title)
 	c := html2gemini.NewTraverseContext(*html2gemini.NewOptions())
 	text, err := html2gemini.FromString(p.HTML, *c)

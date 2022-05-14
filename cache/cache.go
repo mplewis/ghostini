@@ -1,3 +1,5 @@
+// Package cache implements a cache for HTTP responses, using the server's ETag to determine freshness.
+
 package cache
 
 import (
