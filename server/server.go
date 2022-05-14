@@ -47,7 +47,6 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 			w.SetHeader(gemini.CodeNotFound, "")
 			return
 		}
-
 		w.SetHeader(gemini.CodeSuccess, "")
 		render.Post(w, resp.Posts[0])
 		return
