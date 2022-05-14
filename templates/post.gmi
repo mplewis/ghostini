@@ -1,0 +1,12 @@
+=> / Back to post index
+
+# {{ .Title }}
+
+Published {{ .PublishedAgo }}, {{ .ReadingTime }} min read{{ if .Updated }}
+Updated {{ .UpdatedAgo }}{{ end }}
+
+=> {{ .URL }} View original: {{ .URL }}
+
+______________________________________________________________________________
+
+{{ .HTML }}

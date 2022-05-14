@@ -14,17 +14,30 @@ type host struct {
 	contentKey string
 }
 
-type Post struct {
+type PostMeta struct {
 	Title        string    `json:"title"`
 	Slug         string    `json:"slug"`
+	Excerpt      string    `json:"excerpt"`
+	ReadingTime  int       `json:"reading_time"`
 	PublishedAt  time.Time `json:"published_at"`
 	PublishedAgo string
-	Excerpt      string `json:"excerpt"`
-	ReadingTime  int    `json:"reading_time"`
+}
+
+type Post struct {
+	Title        string    `json:"title"`
+	URL          string    `json:"url"`
+	HTML         string    `json:"html"`
+	ReadingTime  int       `json:"reading_time"`
+	CreatedAt    time.Time `json:"created_at"`
+	PublishedAt  time.Time `json:"published_at"`
+	PublishedAgo string
+	UpdatedAt    time.Time `json:"updated_at"`
+	Updated      bool
+	UpdatedAgo   string
 }
 
 type postsResp struct {
-	Posts []Post `json:"posts"`
+	Posts []PostMeta `json:"posts"`
 	Meta  struct {
 		Pagination struct {
 			Page  int `json:"page"`
@@ -35,6 +48,10 @@ type postsResp struct {
 			Prev  int `json:"prev"`
 		} `json:"pagination"`
 	} `json:"meta"`
+}
+
+type postResp struct {
+	Posts []Post `json:"posts"`
 }
 
 func getPosts(c *cache, h host, page int) (postsResp, error) {
@@ -50,7 +67,7 @@ func getPosts(c *cache, h host, page int) (postsResp, error) {
 	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/?%s", h.apiUrl, v.Encode())
 
 	var resp postsResp
-	data, err := c.get(url)
+	data, _, err := c.get(url)
 	if err != nil {
 		return resp, err
 	}
@@ -59,4 +76,23 @@ func getPosts(c *cache, h host, page int) (postsResp, error) {
 		resp.Posts[i].PublishedAgo = timeago.FromTime(resp.Posts[i].PublishedAt)
 	}
 	return resp, err
+}
+
+func getPost(c *cache, h host, slug string) (r postResp, found bool, err error) {
+	v := url.Values{}
+	v.Set("key", h.contentKey)
+	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/slug/%s?%s", h.apiUrl, slug, v.Encode())
+
+	var resp postResp
+	data, found, err := c.get(url)
+	if err != nil || !found {
+		return resp, found, err
+	}
+	err = json.Unmarshal(data, &resp)
+	for i := range resp.Posts {
+		resp.Posts[i].PublishedAgo = timeago.FromTime(resp.Posts[i].PublishedAt)
+		resp.Posts[i].UpdatedAgo = timeago.FromTime(resp.Posts[i].UpdatedAt)
+		resp.Posts[i].Updated = resp.Posts[i].UpdatedAt.After(resp.Posts[i].CreatedAt)
+	}
+	return resp, found, err
 }

@@ -44,8 +44,18 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 
 	if matches := slugMatcher.FindStringSubmatch(r.URL.Path); len(matches) > 0 {
 		slug := matches[1]
+		resp, found, err := getPost(c, h, slug)
+		if err != nil {
+			w.SetHeader(gemini.CodeTemporaryFailure, "")
+			return
+		}
+		if !found {
+			w.SetHeader(gemini.CodeNotFound, "")
+			return
+		}
+
 		w.SetHeader(gemini.CodeSuccess, "")
-		w.Write([]byte(fmt.Sprintf("one post: %s", slug)))
+		renderPost(w, resp.Posts[0])
 		return
 	}
 
