@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -17,9 +16,6 @@ import (
 	"github.com/mplewis/ghostini/ghost"
 	"github.com/mplewis/ghostini/server"
 )
-
-// slugMatcher matches URL paths for slugs with optional trailing slashes, such as /my-slug or /my-slug/.
-var slugMatcher = regexp.MustCompile(`^/([^/]+)/?$`)
 
 // parseInt parses a string into an integer, with a default fallback for any empty/error cases.
 func parseInt(s string, dfault int) int {
