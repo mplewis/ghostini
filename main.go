@@ -14,6 +14,7 @@ import (
 	"github.com/a-h/gemini"
 	"github.com/mplewis/ghostini/cache"
 	"github.com/mplewis/ghostini/ghost"
+	"github.com/mplewis/ghostini/render"
 )
 
 type Server struct{}
@@ -40,7 +41,7 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 			return
 		}
 		w.SetHeader(gemini.CodeSuccess, "")
-		renderIndex(w, h, resp)
+		render.Index(w, h, resp)
 		return
 	}
 
@@ -57,7 +58,7 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 		}
 
 		w.SetHeader(gemini.CodeSuccess, "")
-		renderPost(w, resp.Posts[0])
+		render.Post(w, resp.Posts[0])
 		return
 	}
 

@@ -1,4 +1,6 @@
-package main
+// Package render implements a Gemini renderer for Ghost posts.
+
+package render
 
 import (
 	_ "embed"
@@ -20,6 +22,7 @@ var tmplIndex = template.Must(template.New("index").Parse(tmplIndexRaw))
 var tmplPostRaw string
 var tmplPost = template.Must(template.New("post").Parse(tmplPostRaw))
 
+// indexViewModel is a view model for the posts index page.
 type indexViewModel struct {
 	Host            string
 	Posts           []ghost.PostMeta
@@ -30,7 +33,8 @@ type indexViewModel struct {
 	NextPage        string
 }
 
-func renderIndex(w io.Writer, h ghost.Host, p ghost.PostsResp) error {
+// Index renders the index page, listing Ghost posts.
+func Index(w io.Writer, h ghost.Host, p ghost.PostsResp) error {
 	indexViewModel := indexViewModel{Host: h.APIURL, Posts: p.Posts}
 	fmt.Printf("%+v\n", p.Meta.Pagination)
 	if p.Meta.Pagination.Prev != 0 {
@@ -51,7 +55,8 @@ func renderIndex(w io.Writer, h ghost.Host, p ghost.PostsResp) error {
 	return tmplIndex.Execute(w, indexViewModel)
 }
 
-func renderPost(w io.Writer, p ghost.Post) error {
+// Post renders a single Ghost post.
+func Post(w io.Writer, p ghost.Post) error {
 	p.Title = html.UnescapeString(p.Title)
 	c := html2gemini.NewTraverseContext(*html2gemini.NewOptions())
 	text, err := html2gemini.FromString(p.HTML, *c)
