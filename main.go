@@ -1,3 +1,5 @@
+// Package main runs a Gemini server that serves Ghost content.
+
 package main
 
 import (
@@ -12,15 +14,14 @@ import (
 	"strings"
 
 	"github.com/a-h/gemini"
-	"github.com/mplewis/ghostini/cache"
 	"github.com/mplewis/ghostini/ghost"
-	"github.com/mplewis/ghostini/render"
+	"github.com/mplewis/ghostini/server"
 )
 
-type Server struct{}
-
+// slugMatcher matches URL paths for slugs with optional trailing slashes, such as /my-slug or /my-slug/.
 var slugMatcher = regexp.MustCompile(`^/([^/]+)/?$`)
 
+// parseInt parses a string into an integer, with a default fallback for any empty/error cases.
 func parseInt(s string, dfault int) int {
 	if s == "" {
 		return dfault
@@ -32,47 +33,14 @@ func parseInt(s string, dfault int) int {
 	return i
 }
 
-func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
-	if r.URL.Path == "/" {
-		page := parseInt(r.URL.Query().Get("page"), 1)
-		resp, err := ghost.GetPosts(c, h, page)
-		if err != nil {
-			w.SetHeader(gemini.CodeTemporaryFailure, "")
-			return
-		}
-		w.SetHeader(gemini.CodeSuccess, "")
-		render.Index(w, h, resp)
-		return
-	}
-
-	if matches := slugMatcher.FindStringSubmatch(r.URL.Path); len(matches) > 0 {
-		slug := matches[1]
-		resp, found, err := ghost.GetPost(c, h, slug)
-		if err != nil {
-			w.SetHeader(gemini.CodeTemporaryFailure, "")
-			return
-		}
-		if !found {
-			w.SetHeader(gemini.CodeNotFound, "")
-			return
-		}
-
-		w.SetHeader(gemini.CodeSuccess, "")
-		render.Post(w, resp.Posts[0])
-		return
-	}
-
-	fmt.Println("invalid path")
-	w.SetHeader(gemini.CodeNotFound, "")
-	w.Write([]byte("not found"))
-}
-
+// check crashes if an error is present.
 func check(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+// mustEnv returns the value of an environment variable or crashes if it is not set.
 func mustEnv(key string) string {
 	if val := os.Getenv(key); val != "" {
 		return val
@@ -81,25 +49,19 @@ func mustEnv(key string) string {
 	return ""
 }
 
-var c = cache.New()
-var h = ghost.Host{
-	APIURL:     mustEnv("GHOST_SITE"),
-	ContentKey: mustEnv("CONTENT_KEY"),
-}
-
+// main starts the server.
 func main() {
-	if !(strings.HasPrefix(h.APIURL, "http://") || strings.HasPrefix(h.APIURL, "https://")) {
-		log.Fatalf("GHOST_SITE must start with http:// or https://")
-	}
-	h.APIURL = strings.TrimSuffix(h.APIURL, "/")
-	fmt.Printf("Starting server for Ghost site at %s\n", h.APIURL)
-
 	cert, err := tls.LoadX509KeyPair("tmp/localhost.crt", "tmp/localhost.key")
 	check(err)
 
-	domain := gemini.NewDomainHandler("localhost", cert, Server{})
-	err = gemini.ListenAndServe(context.Background(), ":1965", domain)
-	if err != nil {
-		log.Fatal("error:", err)
+	host := ghost.Host{APIURL: mustEnv("GHOST_SITE"), ContentKey: mustEnv("CONTENT_KEY")}
+	host.APIURL = strings.TrimSuffix(host.APIURL, "/")
+	if !(strings.HasPrefix(host.APIURL, "http://") || strings.HasPrefix(host.APIURL, "https://")) {
+		log.Fatalf("GHOST_SITE must start with http:// or https://")
 	}
+
+	server := server.New(host)
+	domain := gemini.NewDomainHandler("localhost", cert, server)
+	fmt.Printf("Starting server for Ghost site at %s\n", host.APIURL)
+	log.Fatal(gemini.ListenAndServe(context.Background(), ":1965", domain))
 }
