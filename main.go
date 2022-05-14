@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/a-h/gemini"
+	"github.com/mplewis/ghostini/cache"
 )
 
 type Server struct{}
@@ -78,7 +79,7 @@ func mustEnv(key string) string {
 	return ""
 }
 
-var c = newCache()
+var c = cache.New()
 var h = host{
 	apiUrl:     mustEnv("GHOST_SITE"),
 	contentKey: mustEnv("CONTENT_KEY"),

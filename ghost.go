@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/justincampbell/timeago"
+	"github.com/mplewis/ghostini/cache"
 )
 
 type host struct {
@@ -54,7 +55,7 @@ type postResp struct {
 	Posts []Post `json:"posts"`
 }
 
-func getPosts(c *cache, h host, page int) (postsResp, error) {
+func getPosts(c *cache.Cache, h host, page int) (postsResp, error) {
 	v := url.Values{}
 	v.Set("page", fmt.Sprintf("%d", page))
 	v.Set("limit", "10")
@@ -67,7 +68,7 @@ func getPosts(c *cache, h host, page int) (postsResp, error) {
 	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/?%s", h.apiUrl, v.Encode())
 
 	var resp postsResp
-	data, _, err := c.get(url)
+	data, _, err := c.Get(url)
 	if err != nil {
 		return resp, err
 	}
@@ -78,13 +79,13 @@ func getPosts(c *cache, h host, page int) (postsResp, error) {
 	return resp, err
 }
 
-func getPost(c *cache, h host, slug string) (r postResp, found bool, err error) {
+func getPost(c *cache.Cache, h host, slug string) (r postResp, found bool, err error) {
 	v := url.Values{}
 	v.Set("key", h.contentKey)
 	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/slug/%s?%s", h.apiUrl, slug, v.Encode())
 
 	var resp postResp
-	data, found, err := c.get(url)
+	data, found, err := c.Get(url)
 	if err != nil || !found {
 		return resp, found, err
 	}

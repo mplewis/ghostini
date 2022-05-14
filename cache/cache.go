@@ -1,4 +1,4 @@
-package main
+package cache
 
 import (
 	"fmt"
@@ -8,23 +8,28 @@ import (
 	"time"
 )
 
+// client is an HTTP client with a timeout.
 var client = &http.Client{Timeout: 10 * time.Second}
 
+// cached represents previously-fetched data and its ETag.
 type cached struct {
 	data []byte
 	etag string
 }
 
-type cache struct {
-	cache map[string]cached // key: url, value: last known data
+// Cache stores the data for a requested URL.
+type Cache struct {
+	cache map[string]cached
 	mutex sync.RWMutex
 }
 
-func newCache() *cache {
-	return &cache{cache: make(map[string]cached), mutex: sync.RWMutex{}}
+// New builds a new cache and initializes the map.
+func New() *Cache {
+	return &Cache{cache: make(map[string]cached), mutex: sync.RWMutex{}}
 }
 
-func (c *cache) get(url string) (data []byte, found bool, err error) {
+// Get fetches a URL, using the previously-cached data if the server returns 304 Not Modified.
+func (c *Cache) Get(url string) (data []byte, found bool, err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, false, err
