@@ -1,0 +1,12 @@
+# {{ .Host }}: All Posts
+
+{{ if .PrevPagePresent }}=> {{ .PrevPage }} Previous page
+{{ end }}{{ if .NextPagePresent }}=> {{ .NextPage }} Next page
+{{ end }}{{ range .Posts }}
+=> {{.Slug}} {{ .Title }}
+{{ .PublishedAgo }}, {{ .ReadingTime }} min read
+> {{ .Excerpt }}
+{{ end }}
+{{ if .PrevPagePresent }}=> {{ .PrevPage }} Previous page
+{{ end }}{{ if .NextPagePresent }}=> {{ .NextPage }} Next page
+{{ end }}

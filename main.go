@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	_ "embed"
 	"fmt"
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/a-h/gemini"
@@ -14,31 +16,34 @@ import (
 
 type Server struct{}
 
-var allPostsMatcher = regexp.MustCompile(`^/posts/?$`)
-var slugMatcher = regexp.MustCompile(`^/posts/([^/]+)/?$`)
+var slugMatcher = regexp.MustCompile(`^/([^/]+)/?$`)
 
-// /posts => get page 1 of all posts
-// /posts?page=2 => get page 2 of all posts
-// /posts/some-blog-post-slug => get post with slug "some-blog-post-slug"
-func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
-	fmt.Println(r.URL.Path)
-
-	if r.URL.Path == "/" {
-		fmt.Println("home")
-		w.SetHeader(gemini.CodeRedirect, "/posts")
-		return
+func parseInt(s string, dfault int) int {
+	if s == "" {
+		return dfault
 	}
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return dfault
+	}
+	return i
+}
 
-	if allPostsMatcher.MatchString(r.URL.Path) {
-		fmt.Println("all posts")
+func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
+	if r.URL.Path == "/" {
+		page := parseInt(r.URL.Query().Get("page"), 1)
+		resp, err := getPosts(c, h, page)
+		if err != nil {
+			w.SetHeader(gemini.CodeTemporaryFailure, "")
+			return
+		}
 		w.SetHeader(gemini.CodeSuccess, "")
-		w.Write([]byte("all posts"))
+		renderIndex(w, h, resp)
 		return
 	}
 
 	if matches := slugMatcher.FindStringSubmatch(r.URL.Path); len(matches) > 0 {
 		slug := matches[1]
-		fmt.Printf("one post: %s\n", slug)
 		w.SetHeader(gemini.CodeSuccess, "")
 		w.Write([]byte(fmt.Sprintf("one post: %s", slug)))
 		return
@@ -75,13 +80,6 @@ func main() {
 	}
 	h.apiUrl = strings.TrimSuffix(h.apiUrl, "/")
 	fmt.Printf("Starting server for Ghost site at %s\n", h.apiUrl)
-
-	// resp, err := getPosts(c, h, 1)
-	// check(err)
-	// fmt.Println(resp)
-	// resp, err = getPosts(c, h, 1)
-	// check(err)
-	// fmt.Println(resp)
 
 	cert, err := tls.LoadX509KeyPair("tmp/localhost.crt", "tmp/localhost.key")
 	check(err)
