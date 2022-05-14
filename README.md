@@ -12,6 +12,7 @@ Proxy content from your [Ghost blog](https://ghost.org/) into a
 # TODO
 
 - Use zerolog
+- Add `DEBUG` logging
 - Document configuration
 - CI auto-release
 - Screenshot

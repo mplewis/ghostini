@@ -38,8 +38,12 @@ func main() {
 		log.Fatalf("GHOST_SITE must start with http:// or https://")
 	}
 
-	server := server.New(host)
+	server, err := server.New(host)
+	if err != nil {
+		log.Fatalf("Error connecting to %s: %s\n", host.APIURL, err)
+	}
+
 	domain := gemini.NewDomainHandler("localhost", cert, server)
-	fmt.Printf("Starting server for Ghost site at %s\n", host.APIURL)
+	fmt.Printf("Serving Ghost content from %s\n", host.APIURL)
 	log.Fatal(gemini.ListenAndServe(context.Background(), ":1965", domain))
 }

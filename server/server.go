@@ -4,7 +4,6 @@ package server
 
 import (
 	_ "embed"
-	"fmt"
 	"regexp"
 
 	"github.com/a-h/gemini"
@@ -54,11 +53,13 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 		return
 	}
 
-	fmt.Println("invalid path")
 	w.SetHeader(gemini.CodeNotFound, "")
 	w.Write([]byte("not found"))
 }
 
-func New(host ghost.Host) Server {
-	return Server{cache.New(), host}
+func New(host ghost.Host) (Server, error) {
+	s := Server{cache.New(), host}
+	// warm cache and verify connectivity
+	_, err := ghost.GetPosts(s.cache, s.host, 1)
+	return s, err
 }
