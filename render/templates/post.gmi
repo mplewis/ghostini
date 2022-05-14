@@ -10,3 +10,5 @@ Updated {{ .UpdatedAgo }}{{ end }}
 ______________________________________________________________________________
 
 {{ .HTML }}
+
+=> https://github.com/mplewis/ghostini Powered by Ghostini

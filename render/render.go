@@ -58,7 +58,9 @@ func Index(w io.Writer, h ghost.Host, p ghost.PostsResp) error {
 // Post renders a single Ghost post.
 func Post(w io.Writer, p ghost.Post) error {
 	p.Title = html.UnescapeString(p.Title)
-	c := html2gemini.NewTraverseContext(*html2gemini.NewOptions())
+	opts := html2gemini.NewOptions()
+	opts.LinkEmitFrequency = 1
+	c := html2gemini.NewTraverseContext(*opts)
 	text, err := html2gemini.FromString(p.HTML, *c)
 	if err != nil {
 		return err

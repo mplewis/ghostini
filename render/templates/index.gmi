@@ -12,3 +12,4 @@ Published {{ .PublishedAgo }}, {{ .ReadingTime }} min read
 {{ if .PrevPagePresent }}=> {{ .PrevPage }} Previous page
 {{ end }}{{ if .NextPagePresent }}=> {{ .NextPage }} Next page
 {{ end }}
+=> https://github.com/mplewis/ghostini Powered by Ghostini
