@@ -5,7 +5,6 @@ package server
 import (
 	_ "embed"
 	"fmt"
-	"log"
 	"regexp"
 
 	"github.com/a-h/gemini"
@@ -58,13 +57,6 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 	fmt.Println("invalid path")
 	w.SetHeader(gemini.CodeNotFound, "")
 	w.Write([]byte("not found"))
-}
-
-// check crashes if an error is present.
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func New(host ghost.Host) Server {

@@ -16,13 +16,6 @@ import (
 	"github.com/mplewis/ghostini/server"
 )
 
-// check crashes if an error is present.
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 // mustEnv returns the value of an environment variable or crashes if it is not set.
 func mustEnv(key string) string {
 	if val := os.Getenv(key); val != "" {
@@ -35,7 +28,9 @@ func mustEnv(key string) string {
 // main starts the server.
 func main() {
 	cert, err := tls.LoadX509KeyPair("tmp/localhost.crt", "tmp/localhost.key")
-	check(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	host := ghost.Host{APIURL: mustEnv("GHOST_SITE"), ContentKey: mustEnv("CONTENT_KEY")}
 	host.APIURL = strings.TrimSuffix(host.APIURL, "/")
