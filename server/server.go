@@ -57,6 +57,7 @@ func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 	w.Write([]byte("not found"))
 }
 
+// New creates a new Gemini server.
 func New(host ghost.Host) (Server, error) {
 	s := Server{cache.New(), host}
 	// warm cache and verify connectivity
