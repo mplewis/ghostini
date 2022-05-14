@@ -7,28 +7,16 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 
 	"github.com/a-h/gemini"
 	"github.com/mplewis/ghostini/cache"
 	"github.com/mplewis/ghostini/ghost"
+	"github.com/mplewis/ghostini/parse"
 	"github.com/mplewis/ghostini/render"
 )
 
 // slugMatcher matches URL paths for slugs with optional trailing slashes, such as /my-slug or /my-slug/.
 var slugMatcher = regexp.MustCompile(`^/([^/]+)/?$`)
-
-// parseInt parses a string into an integer, with a default fallback for any empty/error cases.
-func parseInt(s string, dfault int) int {
-	if s == "" {
-		return dfault
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return dfault
-	}
-	return i
-}
 
 // Server implements a Gemini server that serves Ghost content.
 type Server struct {
@@ -39,7 +27,7 @@ type Server struct {
 // ServeGemini handles routing and rendering.
 func (s Server) ServeGemini(w gemini.ResponseWriter, r *gemini.Request) {
 	if r.URL.Path == "/" {
-		page := parseInt(r.URL.Query().Get("page"), 1)
+		page := parse.Int(r.URL.Query().Get("page"), 1)
 		resp, err := ghost.GetPosts(s.cache, s.host, page)
 		if err != nil {
 			w.SetHeader(gemini.CodeTemporaryFailure, "")

@@ -6,11 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/justincampbell/timeago"
 	"github.com/mplewis/ghostini/cache"
+	"github.com/mplewis/ghostini/parse"
 )
+
+var perPage = fmt.Sprintf("%d", parse.Int(os.Getenv("PER_PAGE"), 10))
 
 // Host represents the target Ghost instance to fetch data from.
 type Host struct {
@@ -66,7 +70,7 @@ type PostResp struct {
 func GetPosts(c *cache.Cache, h Host, page int) (PostsResp, error) {
 	v := url.Values{}
 	v.Set("page", fmt.Sprintf("%d", page))
-	v.Set("limit", "10")
+	v.Set("limit", perPage)
 	v.Set("key", h.ContentKey)
 	v.Set("fields", "title,slug,published_at,excerpt,reading_time")
 	v.Set("filter", "visibility:public")

@@ -9,25 +9,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/a-h/gemini"
 	"github.com/mplewis/ghostini/ghost"
 	"github.com/mplewis/ghostini/server"
 )
-
-// parseInt parses a string into an integer, with a default fallback for any empty/error cases.
-func parseInt(s string, dfault int) int {
-	if s == "" {
-		return dfault
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return dfault
-	}
-	return i
-}
 
 // check crashes if an error is present.
 func check(err error) {
