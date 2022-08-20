@@ -1,13 +1,13 @@
 #!/bin/bash
 
-export BUILD_CMD="docker buildx build --progress plain --platform linux/amd64,linux/arm64 --push"
-# cut CIRCLE_SHA1 to the first 7 chars
-export BUILD_SHA="$(echo "$CIRCLE_SHA1" | cut -c1-7)"
-
 if [ -z "$CI" ]; then
   echo "This script must be run inside a CI environment."
   exit 0
 fi
+
+export BUILD_CMD="docker buildx build --progress plain --platform linux/amd64,linux/arm64 --push"
+BUILD_SHA="$(echo "$CIRCLE_SHA1" | cut -c1-7)"
+export BUILD_SHA
 
 set -euxo pipefail
 
