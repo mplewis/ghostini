@@ -1,0 +1,21 @@
+#!/bin/bash
+
+export BUILD_CMD="docker buildx build --progress plain --platform linux/amd64,linux/arm64 --push"
+# cut CIRCLE_SHA1 to the first 7 chars
+export BUILD_SHA="$(echo "$CIRCLE_SHA1" | cut -c1-7)"
+
+if [ -z "$CI" ]; then
+  echo "This script must be run inside a CI environment."
+  exit 0
+fi
+
+set -euxo pipefail
+
+$BUILD_CMD -t "$IMAGE_NAME:latest" .
+$BUILD_CMD -t "$IMAGE_NAME:$BUILD_SHA" .
+
+set +u
+if [ -n "$CIRCLE_TAG" ]; then
+  $BUILD_CMD -t "$IMAGE_NAME:$CIRCLE_TAG" .
+fi
+set -u

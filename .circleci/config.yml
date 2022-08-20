@@ -1,0 +1,30 @@
+version: 2.1
+
+jobs:
+  build:
+    resource_class: medium
+    machine:
+      image: ubuntu-2204:2022.07.1
+    steps:
+      - checkout
+      - run:
+          name: Sign in to Docker Hub
+          command: docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      - run:
+          name: Create Docker builder
+          command: docker buildx create --use
+      - run:
+          name: Build and push image
+          command: bin/build-and-push-image
+          environment:
+            IMAGE_NAME: mplewis/ghostini
+
+workflows:
+  build:
+    jobs:
+      - build:
+          context:
+            - Docker Hub
+      #     filters:
+      #       branches:
+      #         only: main
