@@ -18,7 +18,7 @@ var perPage = fmt.Sprintf("%d", parse.Int(os.Getenv("PER_PAGE"), 10))
 
 // Host represents the target Ghost instance to fetch data from.
 type Host struct {
-	APIURL     string
+	SiteURL    string
 	ContentKey string
 }
 
@@ -77,7 +77,7 @@ func GetPosts(c *cache.Cache, h Host, page int) (PostsResp, error) {
 	// HACK: Ghost won't return reading time without plaintext, or excerpt without HTML
 	// https://github.com/TryGhost/Ghost/issues/10396#issuecomment-918849637
 	v.Set("formats", "plaintext,html")
-	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/?%s", h.APIURL, v.Encode())
+	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/?%s", h.SiteURL, v.Encode())
 
 	var resp PostsResp
 	data, _, err := c.Get(url)
@@ -95,7 +95,7 @@ func GetPosts(c *cache.Cache, h Host, page int) (PostsResp, error) {
 func GetPost(c *cache.Cache, h Host, slug string) (r PostResp, found bool, err error) {
 	v := url.Values{}
 	v.Set("key", h.ContentKey)
-	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/slug/%s?%s", h.APIURL, slug, v.Encode())
+	url := fmt.Sprintf("%s/ghost/api/v4/content/posts/slug/%s?%s", h.SiteURL, slug, v.Encode())
 
 	var resp PostResp
 	data, found, err := c.Get(url)

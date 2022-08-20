@@ -8,42 +8,44 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/a-h/gemini"
+	"github.com/mplewis/figyr"
 	"github.com/mplewis/ghostini/ghost"
 	"github.com/mplewis/ghostini/server"
 )
 
-// mustEnv returns the value of an environment variable or crashes if it is not set.
-func mustEnv(key string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	log.Fatalf("Missing mandatory environment variable %s", key)
-	return ""
+type Config struct {
+	GhostSite      string `figyr:"required,description=The base URL of your Ghost website"`
+	ContentKey     string `figyr:"required,description=The Content API key for your Ghost website"`
+	GeminiCertPath string `figyr:"required,description=The path to the certificate for your Gemini domain"`
+	GeminiKeyPath  string `figyr:"required,description=The path to the key for your Gemini domain"`
 }
 
 // main starts the server.
 func main() {
-	cert, err := tls.LoadX509KeyPair("tmp/localhost.crt", "tmp/localhost.key")
+	var cfg Config
+	figyr.MustParse(&cfg)
+
+	if !(strings.HasPrefix(cfg.GhostSite, "http://") || strings.HasPrefix(cfg.GhostSite, "https://")) {
+		log.Fatalf("Ghost site URL must start with http:// or https://")
+	}
+
+	cert, err := tls.LoadX509KeyPair(cfg.GeminiCertPath, cfg.GeminiKeyPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	host := ghost.Host{APIURL: mustEnv("GHOST_SITE"), ContentKey: mustEnv("CONTENT_KEY")}
-	host.APIURL = strings.TrimSuffix(host.APIURL, "/")
-	if !(strings.HasPrefix(host.APIURL, "http://") || strings.HasPrefix(host.APIURL, "https://")) {
-		log.Fatalf("GHOST_SITE must start with http:// or https://")
-	}
+	host := ghost.Host{SiteURL: cfg.GhostSite, ContentKey: cfg.ContentKey}
+	host.SiteURL = strings.TrimSuffix(host.SiteURL, "/")
 
 	server, err := server.New(host)
 	if err != nil {
-		log.Fatalf("Error connecting to %s: %s\n", host.APIURL, err)
+		log.Fatalf("Error connecting to %s: %s\n", host.SiteURL, err)
 	}
 
 	domain := gemini.NewDomainHandler("localhost", cert, server)
-	fmt.Printf("Serving Ghost content from %s\n", host.APIURL)
+	fmt.Printf("Serving Ghost content from %s\n", host.SiteURL)
 	log.Fatal(gemini.ListenAndServe(context.Background(), ":1965", domain))
 }

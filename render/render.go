@@ -35,7 +35,7 @@ type indexViewModel struct {
 
 // Index renders the index page, listing Ghost posts.
 func Index(w io.Writer, h ghost.Host, p ghost.PostsResp) error {
-	indexViewModel := indexViewModel{Host: h.APIURL, Posts: p.Posts}
+	indexViewModel := indexViewModel{Host: h.SiteURL, Posts: p.Posts}
 	if p.Meta.Pagination.Prev != 0 {
 		indexViewModel.PrevPagePresent = true
 		indexViewModel.PrevPage = fmt.Sprintf("/?page=%d", p.Meta.Pagination.Prev)
