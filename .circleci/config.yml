@@ -25,6 +25,6 @@ workflows:
       - build:
           context:
             - Docker Hub
-      #     filters:
-      #       branches:
-      #         only: main
+          filters:
+            branches:
+              only: main
