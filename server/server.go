@@ -5,14 +5,19 @@ package server
 import (
 	"context"
 	_ "embed"
+	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"git.sr.ht/~adnano/go-gemini"
+	"git.sr.ht/~adnano/go-gemini/certificate"
 	"github.com/mplewis/ghostini/cache"
 	"github.com/mplewis/ghostini/ghost"
 	"github.com/mplewis/ghostini/parse"
 	"github.com/mplewis/ghostini/render"
+	"github.com/mplewis/ghostini/types"
 )
 
 // slugMatcher matches URL paths for slugs with optional trailing slashes, such as /my-slug or /my-slug/.
@@ -58,8 +63,29 @@ func (s Server) ServeGemini(ctx context.Context, w gemini.ResponseWriter, r *gem
 	w.Write([]byte("not found"))
 }
 
-// New creates a new Gemini server.
-func New(host ghost.Host) (*gemini.Server, error) {
+// NewGemini creates a new Gemini server.
+func NewGemini(cfg types.Config) (*gemini.Server, error) {
+	if !(strings.HasPrefix(cfg.GhostSite, "http://") || strings.HasPrefix(cfg.GhostSite, "https://")) {
+		log.Fatalf("Ghost site URL must start with http:// or https://")
+	}
+
+	// load certs
+	certs := &certificate.Store{}
+	for _, domain := range strings.Split(cfg.Domains, ",") {
+		certs.Register(domain)
+		fmt.Printf("Registered domain %s\n", domain)
+	}
+	if cfg.GeminiCertsPath != "" {
+		err := certs.Load(cfg.GeminiCertsPath)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("Loaded certificates from %s\n", cfg.GeminiCertsPath)
+	}
+
+	host := ghost.Host{SiteURL: cfg.GhostSite, ContentKey: cfg.ContentKey}
+	host.SiteURL = strings.TrimSuffix(host.SiteURL, "/")
+
 	s := Server{cache.New(), host}
 	// warm cache and verify connectivity
 	_, err := ghost.GetPosts(s.cache, s.host, 1)
@@ -71,9 +97,11 @@ func New(host ghost.Host) (*gemini.Server, error) {
 	mux.Handle("/", s)
 
 	server := &gemini.Server{
-		Handler:      gemini.LoggingMiddleware(mux),
-		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 1 * time.Minute,
+		Handler:        gemini.LoggingMiddleware(mux),
+		ReadTimeout:    30 * time.Second,
+		WriteTimeout:   1 * time.Minute,
+		GetCertificate: certs.Get,
+		Addr:           fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 	}
 	return server, nil
 }
