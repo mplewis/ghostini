@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	git.sr.ht/~adnano/go-gemini v0.2.3 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/justincampbell/bigduration v0.0.0-20160531141349-e45bf03c0666 // indirect
 	github.com/mattn/go-runewidth v0.0.7 // indirect
@@ -17,5 +18,6 @@ require (
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
